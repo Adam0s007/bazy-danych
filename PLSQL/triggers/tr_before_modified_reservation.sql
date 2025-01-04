@@ -1,0 +1,17 @@
+
+create trigger TR_BEFORE_MODIFIED_RESERVATION
+before update of STATUS
+on RESERVATION
+for each row
+DECLARE PRAGMA AUTONOMOUS_TRANSACTION;
+trip INT;
+BEGIN
+IF  (:NEW.STATUS = 'P' OR :NEW.STATUS = 'N') AND :OLD.STATUS = 'C'
+THEN
+SELECT TRIP_ID into trip FROM RESERVATION WHERE RESERVATION_ID = :OLD.reservation_id;
+IF free_places(trip) <= 0 THEN
+RAISE_APPLICATION_ERROR(-20001, 'Trigger error: No available places!');
+END IF;
+END IF;
+END;
+/
